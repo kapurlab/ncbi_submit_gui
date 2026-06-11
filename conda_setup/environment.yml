@@ -1,0 +1,46 @@
+# Environment for the NCBI Submit GUI.
+# Install (shared) with:
+#   mamba env create -p /srv/kapurlab/tools/ncbi_submit_gui/env -f conda_setup/environment.yml
+# or (personal) with:
+#   mamba env create -f conda_setup/environment.yml   # -> env name ncbi_submit
+#
+# This tool needs NO large local sequence database — NCBI lookups go over the
+# E-utilities web API — so the env is light and portable to other OOD systems.
+name: ncbi_submit
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+
+dependencies:
+  # Core Python
+  - python=3.10
+  - pip
+  - pandas
+  - openpyxl
+  - biopython
+  - requests
+  - pyyaml
+
+  # Sequence tooling
+  - seqkit                 # FASTQ/FASTA QC (Q20/Q30, length, N50, ambiguous bases)
+  - ncbi-table2asn         # build GenBank .sqn from FASTA + source table (optional path)
+
+  # Report stack (pure-Python — no headless browser)
+  - matplotlib-base
+  - reportlab
+  - pillow
+
+  # Web backend (FastAPI serves the SPA under OOD)
+  - fastapi>=0.115.0
+  - uvicorn-standard
+  - aiofiles
+  - jinja2
+
+  - pip:
+      - pydantic>=2.0.0
+
+# Notes:
+#  - NCBI eutils API key + submission FTP credentials are runtime config
+#    (~/.config/ncbi_submit_gui/config.json or env vars) — never bundled here.
+#  - table2asn is optional: GenBank also accepts FASTA + a source-modifier table.

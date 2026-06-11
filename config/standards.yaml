@@ -1,0 +1,45 @@
+# Standards this tool enforces and records in every run manifest, so findings
+# are defensible and verifiable. Each entry is cited in the PDF report's
+# Methods section. The `metric` field ties a standard to the check that applies
+# it (see bin/validate.py).
+
+standards:
+  - id: iso_8601_dates
+    standard: "ISO 8601"
+    title: "Date and time — Representations for information interchange"
+    metric: "collection_date normalized to YYYY, YYYY-MM, or YYYY-MM-DD"
+    applies_to: [metadata]
+
+  - id: insdc_geo_loc_name
+    standard: "INSDC geo_loc_name (country:region)"
+    title: "INSDC controlled qualifier for geographic location"
+    metric: "geo_loc_name formatted as Country or Country:Region"
+    applies_to: [metadata]
+    reference: "https://www.insdc.org/submitting-standards/geo_loc_name-qualifier-vocabulary/"
+
+  - id: mixs_biosample_package
+    standard: "MIxS / INSDC BioSample package"
+    title: "Minimum information about any (x) sequence"
+    metric: "required BioSample attributes present for the chosen package"
+    applies_to: [metadata, biosample]
+    reference: "https://www.ncbi.nlm.nih.gov/biosample/docs/packages/"
+
+  - id: phred_quality
+    standard: "Phred quality score (Q20/Q30)"
+    title: "Per-base sequencing quality"
+    metric: "FASTQ Q20% and Q30% computed with seqkit stats -a"
+    applies_to: [fastq_qc]
+
+  - id: insdc_fasta
+    standard: "INSDC nucleotide submission"
+    title: "Sequence/assembly content checks for GenBank deposit"
+    metric: "FASTA length, N50, and ambiguous-base (N) fraction"
+    applies_to: [fasta_qc]
+
+# Per-metric QC thresholds. A sample is flagged 'review' (not failed) when a
+# metric falls outside these — the analyst decides. Tune per deployment.
+qc_thresholds:
+  fastq_min_q30_pct: 70.0          # below -> review (low base quality)
+  fastq_min_reads: 1000            # below -> review (too few reads)
+  fasta_max_ambiguous_pct: 1.0     # above -> review (too many N's)
+  fasta_min_length: 200            # below -> review (suspiciously short)

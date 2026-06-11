@@ -1,0 +1,62 @@
+# Generic organism preset — no pathogen-specific assumptions.
+#
+# Use this for any single-record-per-sample assembly (e.g. a bacterial genome
+# or a non-segmented virus). The organism name MUST be supplied per-sample in
+# the metadata sheet (the `organism` column) since this preset hardcodes none.
+#
+# Each preset declares: fixed NCBI template fields, the metadata column aliases
+# the parser accepts, and (for segmented genomes) a gene/segment map. Copy this
+# file to add a new pathogen — change only the values, keep the keys.
+
+name: generic
+display_name: Generic (organism from metadata)
+
+# *organism for the SRA/BioSample/GenBank records. Empty => required per-sample
+# from the metadata `organism` column.
+organism: ""
+
+# INSDC/MIxS BioSample package the metadata is validated against. See
+# config/ncbi/biosample_packages.yaml. 'Generic.1.0' has the fewest required
+# attributes; switch to Pathogen.cl.1.0 / Virus.1.0 for richer curation.
+biosample_package: Generic.1.0
+
+# Fixed SRA run-metadata fields. Anything left blank must come from metadata.
+sra:
+  title: ""                       # falls back to "WGS of <organism>"
+  library_strategy: WGS
+  library_source: GENOMIC
+  library_selection: RANDOM
+  library_layout: paired
+  platform: ILLUMINA
+  instrument_model_default: Illumina NovaSeq 6000
+  design_description: "Whole-genome sequencing"
+  filetype: fastq
+
+# Fixed GenBank source-modifier fields.
+genbank:
+  mol_type: genomic DNA
+  default_country: USA            # used to build geo_loc_name when only a region/state is given
+
+# Segmented genomes (e.g. influenza) carry multiple records per isolate that get
+# renamed <isolate>_<gene>. Non-segmented organisms set segmented: false and one
+# record per isolate is named <isolate>.
+segmented: false
+gene_map: []
+
+# Regex to pull a serotype out of a FASTA description (optional). Empty => none.
+serotype_regex: ""
+
+# Metadata column aliases: canonical_field -> [accepted header spellings].
+# Headers are matched case-insensitively with spaces/underscores normalized.
+column_aliases:
+  sample_id:        [sample_id, sample, isolate, filename, file_name, strain, sequence_id]
+  bioproject:       [bioproject, bioproject_accession, bio_project]
+  biosample:        [biosample, biosample_accession, bio_sample]
+  sra_accession:    [sra_accession, sra, accession, run]
+  organism:         [organism, species]
+  host:             [host]
+  isolation_source: [isolation_source, sample_type, source]
+  collection_date:  [collection_date, collectiondate, date]
+  geo_loc_name:     [geo_loc_name, geographic_location, country]
+  region:           [region, state, province]
+  serotype:         [serotype, subtype]

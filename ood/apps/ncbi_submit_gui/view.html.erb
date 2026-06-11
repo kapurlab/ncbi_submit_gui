@@ -1,0 +1,12 @@
+<%- if host && port -%>
+<div class="d-flex flex-column gap-3 py-2">
+  <div class="d-flex gap-3 justify-content-center">
+    <a href="/rnode/<%= host %>/<%= port %>/" target="_blank" class="btn btn-success btn-lg px-4">
+      ☁ Open NCBI Submit
+    </a>
+  </div>
+  <p class="text-center text-muted small mb-0">
+    Add FASTQ / FASTA + an Excel metadata sheet to a project, then Prepare and (optionally) Submit.
+  </p>
+</div>
+<%- end -%>

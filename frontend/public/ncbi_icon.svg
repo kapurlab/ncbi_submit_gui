@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="NCBI submission upload icon">
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="#4c8c8a"/>
+  <path d="M20 40a9 9 0 0 1-1-17.9A13 13 0 0 1 45 23a8 8 0 0 1-1 17H35" fill="none" stroke="#f7faf9" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M32 49V28" fill="none" stroke="#c88f7a" stroke-width="3.6" stroke-linecap="round"/>
+  <path d="M24 35l8-8 8 8" fill="none" stroke="#c88f7a" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

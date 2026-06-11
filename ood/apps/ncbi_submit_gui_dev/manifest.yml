@@ -1,0 +1,7 @@
+---
+name: NCBI Submit (dev)
+description: "Dev: branch-picker test environment. Not for production submissions."
+icon: fa://flask
+category: Bioinformatics
+subcategory: Sequence Submission (dev)
+role: batch_connect

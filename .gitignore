@@ -1,0 +1,12 @@
+# conda env + caches (never commit)
+env/
+__pycache__/
+backend/jobs/
+# build artifacts
+node_modules/
+node_modules
+frontend/dist/
+*.pyc
+# local credentials / submission templates (never commit secrets)
+config/templates/template.sbt
+*.local.json

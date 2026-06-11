@@ -1,0 +1,46 @@
+# INSDC/MIxS BioSample packages this tool can validate against.
+#
+# Each package lists the attributes NCBI requires for that sample class. The
+# validator (bin/validate.py) checks that every required attribute resolves
+# (from metadata or a preset default) and records the package in the run
+# manifest so a reviewer can see which curation standard was applied.
+#
+# Reference: https://www.ncbi.nlm.nih.gov/biosample/docs/packages/
+
+Generic.1.0:
+  label: "Generic"
+  required:
+    - sample_name
+    - organism
+    - collection_date
+    - geo_loc_name
+  recommended:
+    - host
+    - isolation_source
+
+Pathogen.cl.1.0:
+  label: "Pathogen: clinical or host-associated"
+  required:
+    - sample_name
+    - organism
+    - collection_date
+    - geo_loc_name
+    - host
+    - isolation_source
+    - collected_by
+  recommended:
+    - strain
+    - isolate
+
+Virus.1.0:
+  label: "Virus"
+  required:
+    - sample_name
+    - organism
+    - collection_date
+    - geo_loc_name
+    - host
+    - isolation_source
+  recommended:
+    - serotype
+    - isolate

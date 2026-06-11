@@ -1,0 +1,7 @@
+---
+name: NCBI Submit
+description: "Prepare & submit SRA (FASTQ) and GenBank (FASTA) deposits from an Excel metadata sheet — validated, deduplicated, BioSample-linked, with PDF/Excel reports"
+icon: fa://cloud-upload-alt
+category: Bioinformatics
+subcategory: Sequence Submission
+role: batch_connect

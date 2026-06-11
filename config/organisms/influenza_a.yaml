@@ -1,0 +1,56 @@
+# Influenza A virus preset — reproduces the lab's existing dvl_irma
+# sra_metadata.py / genbank_metadata.py behavior in the config-driven engine.
+#
+# 8-segment genome: each isolate's FASTA holds one record per segment, renamed
+# <isolate>_<gene> in submission order. Serotype (H#N#) is parsed from the FASTA
+# description. Geo location defaults to USA and is combined with the state/region.
+
+name: influenza_a
+display_name: Influenza A virus
+
+organism: Influenza A virus
+biosample_package: Virus.1.0
+
+sra:
+  title: "WGS of Influenza A"
+  library_strategy: WGS
+  library_source: VIRAL RNA
+  library_selection: RANDOM
+  library_layout: paired
+  platform: ILLUMINA
+  instrument_model_default: NextSeq 2000
+  design_description: "WGS of Influenza A"
+  filetype: fastq
+
+genbank:
+  mol_type: viral cRNA
+  default_country: USA
+
+segmented: true
+# Order matches the canonical influenza segment order; the Nth record in each
+# isolate's FASTA is assigned the Nth gene here.
+gene_map:
+  - PB2
+  - PB1
+  - PA
+  - HA
+  - NP
+  - NA
+  - MP
+  - NS
+
+# Matches "(H5N1)" etc. in a FASTA description.
+serotype_regex: '\(H\d+N\d+\)'
+
+column_aliases:
+  sample_id:        [sample_id, filename, file_name, isolate, sequence_id, strain]
+  bioproject:       [bioproject, bioproject_accession, bio_project]
+  biosample:        [biosample, biosample_accession, bio_sample]
+  sra_accession:    [sra_accession, sra, accession, run]
+  organism:         [organism, species]
+  host:             [host, species]
+  isolation_source: [isolation_source, sample_type, source]
+  collection_date:  [collection_date, collectiondate, date]
+  geo_loc_name:     [geo_loc_name, geographic_location, country]
+  region:           [region, state, province, geo_loc_name]
+  serotype:         [serotype, subtype]
