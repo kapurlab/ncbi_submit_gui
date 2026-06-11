@@ -24,7 +24,7 @@ dependencies:
 
   # Sequence tooling
   - seqkit                 # FASTQ/FASTA QC (Q20/Q30, length, N50, ambiguous bases)
-  - ncbi-table2asn         # build GenBank .sqn from FASTA + source table (optional path)
+  - table2asn              # build GenBank .sqn from FASTA + source table (optional path)
 
   # Report stack (pure-Python — no headless browser)
   - matplotlib-base
