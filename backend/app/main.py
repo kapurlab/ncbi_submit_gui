@@ -70,11 +70,14 @@ def _safe_mtime(p: Path) -> float:
 
 
 def _count_files(d: Path, exts) -> int:
-    if not d.is_dir():
-        return 0
+    # Shared projects may belong to another user; stat/iterdir can raise
+    # PermissionError. Treat "no access" as -1 (the frontend shows it as such)
+    # rather than 500-ing the whole project list.
     try:
+        if not d.is_dir():
+            return 0
         return sum(1 for p in d.iterdir() if p.is_file() and p.name.lower().endswith(exts))
-    except PermissionError:
+    except (PermissionError, OSError):
         return -1
 
 
