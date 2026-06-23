@@ -65,7 +65,7 @@ export default function App() {
   const [folderBrowser, setFolderBrowser] = useState({ open: false, path: "", parent: null, entries: [], loading: false, error: "" });
 
   const logRef = useRef(null);
-  const esRef = useRef(null);
+  const watchIdRef = useRef(null);  // id of the job the poll loop is currently watching
 
   useEffect(() => {
     fetch("./api/config").then((r) => r.json()).then((c) => {
@@ -193,29 +193,55 @@ export default function App() {
       .then((r) => (r.ok ? r.json() : r.json().then((e) => { throw new Error(e.detail || "Run failed"); })))
       .then(({ job_id, run_id }) => {
         setJobId(job_id); setActiveRun({ project: activeProject, run_id });
-        streamLog(job_id, activeProject, run_id);
+        watchJob(job_id, activeProject, run_id);
       })
       .catch((err) => { setLogLines((p) => [...p, `ERROR: ${err.message}`]); setRunning(false); setJobStatus("failed"); });
   }
 
-  function streamLog(id, project, runId) {
-    if (esRef.current) { esRef.current.close(); esRef.current = null; }
-    const es = new EventSource(`./api/jobs/${id}/log`);
-    esRef.current = es;
-    es.onmessage = (evt) => {
-      const data = evt.data;
-      if (data === "[DONE]") {
-        es.close(); setRunning(false);
-        fetch(`./api/jobs/${id}`).then((r) => r.json()).then((job) => {
-          setJobStatus(job.status); setCurrentStep("");
-          loadRunResults(project, runId); loadProjects();
-        }).catch(() => {});
-      } else {
-        setLogLines((p) => [...p, data]);
-        if (/^###/.test(data) || /completed/i.test(data)) setCurrentStep(data.replace(/^#+\s*/, "").trim());
-      }
+  // Watch a job by POLLING a plain endpoint (no SSE/EventSource). The OOD /rnode
+  // Apache proxy holds SSE connections open and corrupts concurrent sibling
+  // requests (a status poll comes back with the SSE's buffered body, breaking
+  // JSON parsing -> successful runs were mislabelled "Failed"). /api/jobs/{id}/logtext
+  // is a normal GET returning BOTH the recorded status (from the real exit code)
+  // and the current log text, so one poll loop drives status + live-ish logs safely.
+  function watchJob(id, project, runId) {
+    watchIdRef.current = id;   // newest run wins; stale loops below bail out
+    let errors = 0;
+    let finished = false;
+    const finish = (status) => {
+      if (finished || watchIdRef.current !== id) return;
+      finished = true;
+      setRunning(false);
+      setJobStatus(status);
+      setCurrentStep("");
+      loadRunResults(project, runId); loadProjects();
     };
-    es.onerror = () => { es.close(); setRunning(false); setJobStatus("failed"); };
+    const tick = () => {
+      if (finished || watchIdRef.current !== id) return;
+      fetch(`./api/jobs/${id}/logtext`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error("http " + r.status))))
+        .then((data) => {
+          errors = 0;
+          if (typeof data.log === "string") {
+            const lines = data.log.split("\n");
+            setLogLines(lines);
+            for (let i = lines.length - 1; i >= 0; i--) {
+              const d = lines[i];
+              if (/^###/.test(d) || /completed/i.test(d)) {
+                setCurrentStep(d.replace(/^#+\s*/, "").trim()); break;
+              }
+            }
+          }
+          if (!data.status || data.status === "running") { setTimeout(tick, 2000); return; }
+          finish(data.status);   // succeeded | failed from the real exit code
+        })
+        .catch(() => {
+          errors += 1;
+          if (errors < 30) setTimeout(tick, 2000);
+          else finish("failed");
+        });
+    };
+    setTimeout(tick, 1200);
   }
 
   function loadRunResults(project, runId) {
