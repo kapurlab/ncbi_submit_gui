@@ -237,7 +237,8 @@ export default function App() {
 
   function saveSettings() {
     const body = {
-      projects_root: settingsDraft.projects_root, organism_preset: settingsDraft.organism_preset,
+      projects_root: settingsDraft.projects_root, saved_project_roots: settingsDraft.saved_project_roots,
+      organism_preset: settingsDraft.organism_preset,
       submit_target: settingsDraft.submit_target, ncbi_email: settingsDraft.ncbi_email,
       ncbi_ftp_host: settingsDraft.ncbi_ftp_host, ncbi_ftp_user: settingsDraft.ncbi_ftp_user,
       ncbi_organization: settingsDraft.ncbi_organization, ncbi_contact_first: settingsDraft.ncbi_contact_first,
@@ -250,6 +251,17 @@ export default function App() {
       .then((r) => r.json()).then(() => fetch("./api/config").then((r) => r.json()).then((c) => { setCfg(c); setSettingsDraft(c); }))
       .catch(() => {});
   }
+
+  function persistRoots(next) {
+    const merged = { ...settingsDraft, ...next };
+    setSettingsDraft(merged);
+    fetch("./api/config", { method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ projects_root: merged.projects_root, saved_project_roots: merged.saved_project_roots }),
+    }).then((r) => r.json()).then(() => fetch("./api/config").then((r) => r.json()).then((c) => { setCfg(c); setSettingsDraft(c); })).catch(() => {});
+  }
+  function saveCurrentLocation() { const cur=(settingsDraft.projects_root||"").trim(); const list=settingsDraft.saved_project_roots||[]; if(!cur||list.includes(cur))return; persistRoots({saved_project_roots:[...list,cur]}); }
+  function removeSavedLocation(p){ persistRoots({saved_project_roots:(settingsDraft.saved_project_roots||[]).filter((r)=>r!==p)}); }
+  function jumpToLocation(p){ if(p) persistRoots({projects_root:p}); }
 
   const logLineClass = (line) => {
     if (line.startsWith("$ ")) return "log-line cmd";
@@ -352,6 +364,20 @@ export default function App() {
                   <input style={{ flex: 1 }} value={settingsDraft.projects_root || ""} onChange={(e) => setSettingsDraft((d) => ({ ...d, projects_root: e.target.value }))} />
                   <button type="button" className="ghost" onClick={() => { setFolderBrowser({ open: true, path: "", parent: null, entries: [], loading: true, error: "" }); browseDirs(settingsDraft.projects_root || ""); }}>Browse…</button>
                 </div>
+              </div>
+              <div className="form-section">
+                <label className="form-label">Saved locations</label>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                  <select value="" onChange={(e) => jumpToLocation(e.target.value)}
+                    disabled={!(settingsDraft.saved_project_roots && settingsDraft.saved_project_roots.length)}>
+                    <option value="">{settingsDraft.saved_project_roots && settingsDraft.saved_project_roots.length ? "↦ Jump to a saved location…" : "No saved locations yet"}</option>
+                    {(settingsDraft.saved_project_roots || []).map((r) => (<option key={r} value={r}>{r}</option>))}
+                  </select>
+                  <button type="button" className="ghost" onClick={saveCurrentLocation}
+                    disabled={!settingsDraft.projects_root || (settingsDraft.saved_project_roots || []).includes(settingsDraft.projects_root)}>★ Save current</button>
+                  <button type="button" className="ghost" onClick={() => removeSavedLocation(settingsDraft.projects_root)}
+                    disabled={!(settingsDraft.saved_project_roots || []).includes(settingsDraft.projects_root)}>Remove</button>
+                </span>
               </div>
               <div className="note" style={{ marginBottom: 8 }}>
                 Credentials are stored only in your private <code>~/.config/ncbi_submit_gui/config.json</code> (or env vars) — never in the repo. The submission target defaults to NCBI's <strong>test</strong> area.

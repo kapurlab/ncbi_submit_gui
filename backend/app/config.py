@@ -51,6 +51,7 @@ _ENV_OVERRIDES = {
 DEFAULTS: Dict[str, Any] = {
     "projects_root": str(Path.home() / "projects"),
     "shared_projects_root": _DEFAULT_SHARED_PROJECTS_ROOT,
+    "saved_project_roots": [],
     # NCBI eutils — used for the "already in NCBI?" existence checks and the
     # SRA<->GenBank BioSample crosswalk. An API key lifts the rate limit 3->10/s.
     "ncbi_email": "",
