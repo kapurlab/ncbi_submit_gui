@@ -31,13 +31,13 @@ from typing import Any, Dict, List, Optional
 
 import aiofiles
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from .config import SECRET_KEYS, load_config, public_config, save_config
 from .jobs import JobManager
+from .request_safety import install_request_safety
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ _SHARED_PROJECTS = Path("/srv/kapurlab/projects")
 _JOBS_DIR = _REPO_ROOT / "backend" / "jobs"
 
 app = FastAPI(title="NCBI Submit GUI")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+install_request_safety(app)
 job_manager = JobManager(_JOBS_DIR)
 
 _SCOPE_SHARED = "shared"
