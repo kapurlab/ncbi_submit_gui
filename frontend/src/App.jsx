@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import "./App.css";
+import ThemeToggle from "./ThemeToggle";
 
 const APP_VERSION = "0.1.0";
 
@@ -287,7 +288,10 @@ export default function App() {
             <p>Prepare &amp; submit SRA (FASTQ) and GenBank (FASTA) deposits from an Excel metadata sheet — validated, deduplicated, and report-backed.</p>
           </div>
         </div>
-        <div className="status-pill"><span className="dot" data-state={jobStatus} /><span>{statusText}</span></div>
+        <div className="header-actions">
+          <ThemeToggle />
+          <div className="status-pill"><span className="dot" data-state={jobStatus} /><span>{statusText}</span></div>
+        </div>
       </header>
 
       <main className="layout">
