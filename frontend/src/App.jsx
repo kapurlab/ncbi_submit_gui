@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import ThemeToggle from "./ThemeToggle";
+import ResultsPane from "./ResultsPane";
+import { useResults } from "./useResults";
 
 const APP_VERSION = "0.1.0";
 
@@ -22,12 +24,25 @@ function fmtSize(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+// The tool-specific columns of the shared Results table. Everything else
+// about the pane is identical across the suite.
+const RESULT_COLUMNS = [
+  { key: "mode", label: "Mode" },
+  { key: "archive", label: "Archive" },
+  { key: "target", label: "Target" },
+  { key: "accessions", label: "Accessions", align: "right" },
+];
+
 export default function App() {
   const [projects, setProjects] = useState([]);
   const [projectsLoading, setProjectsLoading] = useState(true);
   const [newProjectName, setNewProjectName] = useState("");
   const [creatingProject, setCreatingProject] = useState(false);
   const [activeProject, setActiveProject] = useState("");
+  /* Every completed run for the active project. Refreshed when a run
+     finishes rather than polled, matching the rest of the suite. */
+  const results = useResults(activeProject);
+  const [showResultsPane, setShowResultsPane] = useState(true);
   const [expanded, setExpanded] = useState({});
 
   // Inputs per project: { [name]: { fastq, fasta, metadata } } each {files,count,total_bytes}
@@ -78,6 +93,9 @@ export default function App() {
       if (Array.isArray(p)) setPresets(p);
     }).catch(() => {});
     loadProjects();
+    // The Results table is where finished work is now read, so it
+    // has to reflect the run that just ended.
+    results.reload();
   }, []);
 
   useEffect(() => {
@@ -495,7 +513,7 @@ export default function App() {
           <button className="ghost" onClick={() => setShowRun(!showRun)}>{showRun ? "Hide" : "Show"}</button>
         </div>
         {showRun && (
-          <div className="row-grid row-grid-split">
+          <div className="row-grid row-grid-single">
             <section className="panel">
               <h2>Configure</h2>
               <div className="form-section">
@@ -550,18 +568,6 @@ export default function App() {
               </button>
             </section>
 
-            <section className="panel">
-              <div className="panel-header"><h2>Current run</h2>{jobId && <span className="muted" style={{ fontSize: 12 }}>job {jobId.slice(0, 8)}</span>}</div>
-              {activeRun ? (
-                <div className="selection-box">
-                  <div className="sel-title">{jobStatus === "running" ? "Running" : jobStatus === "succeeded" ? "Done" : jobStatus}</div>
-                  <div><span className="sel-name">{activeRun.run_id}</span></div>
-                  <div style={{ marginTop: 2 }}><span className="muted">Project:</span> <strong>{activeRun.project}</strong></div>
-                  {currentStep && <div className="muted" style={{ marginTop: 4 }}>{currentStep}</div>}
-                  <div className="note" style={{ marginTop: 8 }}>Outputs appear in the Results section below when finished.</div>
-                </div>
-              ) : <div className="empty-msg">No active run. Configure and click the run button.</div>}
-            </section>
           </div>
         )}
 
@@ -595,6 +601,40 @@ export default function App() {
                   </>
                 )}
             </section>
+          </div>
+        )}
+
+        {/* ════════════════════════════════════════════════════════ */}
+        {/* SECTION: Results — every completed run, not just the last  */}
+        {/* ════════════════════════════════════════════════════════ */}
+        <div className="row-header">
+          <h2>Results</h2>
+          <button className="ghost" onClick={() => setShowResultsPane(!showResultsPane)}>
+            {showResultsPane ? "Hide" : "Show"}
+          </button>
+        </div>
+        {showResultsPane && (
+          <div className="row-grid row-grid-split">
+            {/* LEFT — Current Run (live status for the batch in flight) */}
+<section className="panel">
+              <div className="panel-header"><h2>Current Run</h2>{jobId && <span className="muted" style={{ fontSize: 12 }}>job {jobId.slice(0, 8)}</span>}</div>
+              {activeRun ? (
+                <div className="selection-box">
+                  <div className="sel-title">{jobStatus === "running" ? "Running" : jobStatus === "succeeded" ? "Done" : jobStatus}</div>
+                  <div><span className="sel-name">{activeRun.run_id}</span></div>
+                  <div style={{ marginTop: 2 }}><span className="muted">Project:</span> <strong>{activeRun.project}</strong></div>
+                  {currentStep && <div className="muted" style={{ marginTop: 4 }}>{currentStep}</div>}
+                  <div className="note" style={{ marginTop: 8 }}>Outputs appear in the Results section below when finished.</div>
+                </div>
+              ) : <div className="empty-msg">No active run. Configure and click the run button.</div>}
+            </section>
+            {/* RIGHT — every completed run, searchable (vSNP Step 1 model) */}
+            <ResultsPane
+              project={activeProject}
+              results={results}
+              columns={RESULT_COLUMNS}
+              labels={{ entity: "run", sampleHeader: "Run" }}
+            />
           </div>
         )}
 
