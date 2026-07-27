@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 import ThemeToggle from "./ThemeToggle";
+import CitationFooter from "./Citations";
 import ResultsPane from "./ResultsPane";
 import { useResults } from "./useResults";
 
@@ -659,6 +660,8 @@ export default function App() {
           </div>
         )}
       </main>
+
+      <CitationFooter tool="ncbi_submit_gui" />
 
       {folderBrowser.open && (
         <div onClick={() => setFolderBrowser((s) => ({ ...s, open: false }))} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.45)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 }}>
