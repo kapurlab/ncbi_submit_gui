@@ -70,4 +70,4 @@ NCBI API key and FTP password live only in `~/.config/ncbi_submit_gui/config.jso
 `NCBI_FTP_HOST/USER/PASS`). They are never committed and never returned to the
 browser.
 
-See `CLAUDE.md` and `docs/BUILDING_A_SIBLING_TOOL.md` for development details.
+See `docs/BUILDING_A_SIBLING_TOOL.md` for development details.
