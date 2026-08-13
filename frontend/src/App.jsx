@@ -5,7 +5,10 @@ import CitationFooter from "./Citations";
 import ResultsPane from "./ResultsPane";
 import { useResults } from "./useResults";
 
-const APP_VERSION = "0.1.0";
+// Fallback ONLY: the header shows the backend-reported version (git
+// describe — the same string the Diagnostic Tools Dashboard shows) and
+// uses this constant just until that arrives / on installs without git.
+const APP_VERSION = "0.2.3";
 
 function fileIcon(name) {
   if (name.endsWith(".json")) return "📁";
@@ -56,6 +59,9 @@ export default function App() {
   // Config + run options
   const [cfg, setCfg] = useState({});
   const [settingsDraft, setSettingsDraft] = useState({});
+  // Version of the deployed checkout as reported by the backend (git
+  // describe — the same string the Diagnostic Tools Dashboard shows).
+  const [serverVersion, setServerVersion] = useState("");
   const [presets, setPresets] = useState([]);
   const [organism, setOrganism] = useState("generic");
   const [archive, setArchive] = useState("both");
@@ -87,6 +93,7 @@ export default function App() {
   useEffect(() => {
     fetch("./api/config").then((r) => r.json()).then((c) => {
       setCfg(c); setSettingsDraft(c);
+      setServerVersion(c.app_version || "");
       if (c.organism_preset) setOrganism(c.organism_preset);
       if (c.submit_target) setTarget(c.submit_target);
     }).catch(() => {});
@@ -303,7 +310,7 @@ export default function App() {
         <div className="app-brand">
           <img className="app-logo" src="./ncbi_icon.svg" alt="NCBI submission upload icon" />
           <div>
-            <h1>NCBI Submit <span className="version-tag">v{APP_VERSION}</span></h1>
+            <h1>NCBI Submit <span className="version-tag">{serverVersion || `v${APP_VERSION}`}</span></h1>
             <p>Prepare &amp; submit SRA (FASTQ) and GenBank (FASTA) deposits from an Excel metadata sheet — validated, deduplicated, and report-backed.</p>
           </div>
         </div>

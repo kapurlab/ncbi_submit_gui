@@ -24,6 +24,7 @@ import json
 import logging
 import os
 import re
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -50,6 +51,25 @@ _ORGANISMS_DIR = _CONFIG_DIR / "organisms"
 _FRONTEND_DIST = _REPO_ROOT / "frontend" / "dist"
 _SHARED_PROJECTS = Path("/srv/kapurlab/projects")
 _JOBS_DIR = _REPO_ROOT / "backend" / "jobs"
+
+
+def _resolve_app_version() -> str:
+    """Version of the deployed checkout — the exact string the Diagnostic
+    Tools Dashboard shows for this tool (`git describe --tags --always`,
+    the same command bdtools runs). Resolved once at startup; empty when
+    git or the .git dir is unavailable, in which case the frontend falls
+    back to its built-in constant."""
+    try:
+        out = subprocess.run(
+            ["git", "-C", str(_REPO_ROOT), "describe", "--tags", "--always"],
+            capture_output=True, text=True, timeout=10,
+        )
+        return out.stdout.strip() if out.returncode == 0 else ""
+    except Exception:
+        return ""
+
+
+APP_VERSION = _resolve_app_version()
 
 app = FastAPI(title="NCBI Submit GUI")
 install_request_safety(app)
@@ -348,7 +368,10 @@ def api_organism_presets():
 
 @app.get("/api/config")
 def api_get_config():
-    return JSONResponse(public_config(load_config()))
+    cfg = public_config(load_config())
+    # Deployed checkout's version (git describe) — what the dashboard shows.
+    cfg["app_version"] = APP_VERSION
+    return JSONResponse(cfg)
 
 
 class ConfigPayload(BaseModel):
