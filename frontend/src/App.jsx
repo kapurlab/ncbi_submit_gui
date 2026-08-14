@@ -476,9 +476,9 @@ export default function App() {
               {!activeProject ? <div className="empty-msg">Create or pick a project, then add FASTQ, FASTA, and a metadata sheet.</div> : (
                 <div className="input-columns">
                   {[
-                    { kind: "fastq", title: "FASTQ (SRA)", hint: ".fastq.gz — paired reads", path: "/srv/kapurlab/… folder or .fastq.gz" },
-                    { kind: "fasta", title: "FASTA (GenBank)", hint: ".fasta / .fa / .fna assemblies", path: "/srv/kapurlab/… folder or .fasta" },
-                    { kind: "metadata", title: "Metadata (Excel)", hint: ".xlsx NCBI metadata sheet", path: "/srv/kapurlab/… .xlsx" },
+                    { kind: "fastq", title: "FASTQ (SRA)", hint: ".fastq.gz — paired reads", path: "/path/to/folder or .fastq.gz" },
+                    { kind: "fasta", title: "FASTA (GenBank)", hint: ".fasta / .fa / .fna assemblies", path: "/path/to/folder or .fasta" },
+                    { kind: "metadata", title: "Metadata (Excel)", hint: ".xlsx NCBI metadata sheet", path: "/path/to/metadata.xlsx" },
                   ].map(({ kind, title, hint, path }) => {
                     const key = `${activeProject}:${kind}`;
                     const data = (inputs[activeProject] || {})[kind] || { files: [] };
