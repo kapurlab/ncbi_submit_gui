@@ -412,7 +412,7 @@ export default function App() {
               <div className="note" style={{ marginBottom: 8 }}>
                 Credentials are stored only in your private <code>~/.config/ncbi_submit_gui/config.json</code> (or env vars) — never in the repo. The submission target defaults to NCBI's <strong>test</strong> area.
               </div>
-              <div style={{ display: "flex", justifyContent: "flex-end" }}><button onClick={saveSettings}>Save</button></div>
+              <div style={{ display: "flex", justifyContent: "flex-end" }}><button onClick={saveSettings} title="Save these settings and reload the app with them — a new path only takes effect once this is clicked">Save &amp; Refresh</button></div>
             </section>
           </div>
         )}
