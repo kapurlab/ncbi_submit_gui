@@ -5,6 +5,7 @@ import CitationFooter from "./Citations";
 import ResultsPane from "./ResultsPane";
 import { useResults } from "./useResults";
 import CopyLogButton from "./CopyLogButton";
+import { PaneSplitters } from "./SplitPane";
 
 // Fallback ONLY: the header shows the backend-reported version (git
 // describe — the same string the Diagnostic Tools Dashboard shows) and
@@ -313,6 +314,9 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* Draggable dividers for every two-pane row on the page (see
+          SplitPane.jsx). One element, no per-row wiring. */}
+      <PaneSplitters />
       <input ref={uploadInputRef} type="file" multiple style={{ display: "none" }}
         onChange={(e) => { const f = Array.from(e.target.files); e.target.value = ""; uploadFiles(uploadRef.current.project, uploadRef.current.kind, f); }} />
 
