@@ -10,7 +10,6 @@ name: ncbi_submit
 channels:
   - conda-forge
   - bioconda
-  - defaults
 
 dependencies:
   # Core Python
