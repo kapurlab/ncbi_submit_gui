@@ -237,23 +237,51 @@ export default function App() {
   }
 
   function streamLog(id, project, runId) {
+    // Live log by POLLING ./api/jobs/{id}/logtext — not SSE. Behind an Open
+    // OnDemand /rnode Apache reverse proxy a held-open EventSource is
+    // hazardous: the proxy hands the SSE buffer back as the body of concurrent
+    // sibling GETs, so a status fetch arrives as log text, JSON parsing fails,
+    // and a run that succeeded is reported "failed". One plain GET returning
+    // status + the whole log (tail-truncated server-side, under the proxy's
+    // ~43.5 KB ceiling) is proxy-safe. The pane is replaced wholesale on every
+    // poll and the step detector re-reads it; React drops the no-op updates.
+    // esRef keeps its contract — whoever holds it can still .close().
     if (esRef.current) { esRef.current.close(); esRef.current = null; }
-    const es = new EventSource(`./api/jobs/${id}/log`);
-    esRef.current = es;
-    es.onmessage = (evt) => {
-      const data = evt.data;
-      if (data === "[DONE]") {
-        es.close(); setRunning(false);
-        fetch(`./api/jobs/${id}`).then((r) => r.json()).then((job) => {
-          setJobStatus(job.status); setCurrentStep("");
-          loadRunResults(project, runId); loadProjects();
-        }).catch(() => {});
-      } else {
-        setLogLines((p) => [...p, data]);
-        if (/^###/.test(data) || /completed/i.test(data)) setCurrentStep(data.replace(/^#+\s*/, "").trim());
-      }
+    let timer = null, finished = false, errors = 0;
+    const handle = { close() { finished = true; if (timer) { clearTimeout(timer); timer = null; } } };
+    esRef.current = handle;
+    const finish = () => {
+      handle.close();
+      if (esRef.current === handle) esRef.current = null;
+      setRunning(false);
+      fetch(`./api/jobs/${id}`).then((r) => r.json()).then((job) => {
+        setJobStatus(job.status); setCurrentStep("");
+        loadRunResults(project, runId); loadProjects();
+      }).catch(() => {});
     };
-    es.onerror = () => { es.close(); setRunning(false); setJobStatus("failed"); };
+    const tick = () => {
+      if (finished) return;
+      fetch(`./api/jobs/${id}/logtext`)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`http ${r.status}`))))
+        .then((d) => {
+          if (finished) return;
+          errors = 0;
+          const lines = (typeof d.log === "string" ? d.log.split("\n") : []).filter((l) => l.trim() !== "");
+          setLogLines(lines);
+          for (const data of lines) {
+            if (/^###/.test(data) || /completed/i.test(data)) setCurrentStep(data.replace(/^#+\s*/, "").trim());
+          }
+          if (d.status === "succeeded" || d.status === "failed") { finish(); return; }
+          timer = setTimeout(tick, 1500);
+        })
+        .catch(() => {
+          if (finished) return;
+          errors += 1;
+          if (errors < 40) { timer = setTimeout(tick, 2000); return; }
+          finish();
+        });
+    };
+    tick();
   }
 
   function loadRunResults(project, runId) {
