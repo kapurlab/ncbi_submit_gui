@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
+import { askOnPage } from "./pageAsk.jsx";
 import ThemeToggle from "./ThemeToggle";
 import CitationFooter from "./Citations";
 import ResultsPane from "./ResultsPane";
@@ -144,7 +145,7 @@ export default function App() {
       const res = await fetch("./api/projects", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }),
       });
-      if (!res.ok) { const d = await res.json().catch(() => ({})); window.alert(`Could not create project: ${d.detail || res.status}`); return; }
+      if (!res.ok) { const d = await res.json().catch(() => ({})); askOnPage({ notice: true, message: `Could not create project: ${d.detail || res.status}` }); return; }
       const created = await res.json().catch(() => ({}));
       setNewProjectName(""); loadProjects();
       if (created.name) { setExpanded((e) => ({ ...e, [created.name]: true })); setActiveProject(created.name); loadInputs(created.name); }
@@ -209,7 +210,7 @@ export default function App() {
   }
 
   async function deleteInput(name, kind, filename) {
-    if (!window.confirm(`Remove ${filename}?`)) return;
+    if (!(await askOnPage({ okLabel: "Remove", message: `Remove ${filename}?` }))) return;
     await fetch(`./api/projects/${encodeURIComponent(name)}/inputs/${encodeURIComponent(filename)}?kind=${kind}`, { method: "DELETE" }).catch(() => {});
     loadInputs(name); loadProjects();
   }
@@ -218,7 +219,7 @@ export default function App() {
     if (running || !activeProject) return;
     const metaFiles = inputs[activeProject]?.metadata?.files || [];
     const meta = selectedMeta || (metaFiles[0]?.name || "");
-    if (!meta) { window.alert("Upload an NCBI metadata workbook (.xlsx) first."); return; }
+    if (!meta) { askOnPage({ notice: true, message: "Upload an NCBI metadata workbook (.xlsx) first." }); return; }
     setShowLogs(true); setRunning(true); setJobStatus("running"); setLogLines([]); setCurrentStep("");
     const endpoint = mode === "submit" ? "submit" : "prep";
     fetch(`./api/run/${endpoint}`, {
